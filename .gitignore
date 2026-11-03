@@ -1,0 +1,14 @@
+.vs/
+**/bin/
+**/obj/
+**/TestResults/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+.env
+.env.*
+**/appsettings.Local.json
