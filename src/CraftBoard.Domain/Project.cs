@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 
 
+
 namespace CraftBoard.Domain.Entities;
 
 public class Project
@@ -13,7 +14,8 @@ public class Project
 
     public string Description { get; private set; } = string.Empty;
 
-    public DateTime CreatedAtUtc { get; private set; } = DateTime.UtcNow;
+    public DateTime CreatedAtUtc { get; private set; }
+        = DateTime.UtcNow;
 
     private Project()
     {
@@ -30,6 +32,12 @@ public class Project
         if (string.IsNullOrWhiteSpace(name)) {
             throw new ArgumentException(
                 "Project name cannot be empty.",
+                nameof(name));
+        }
+
+        if (name.Length > 100) {
+            throw new ArgumentException(
+                "Project name must not exceed 100 characters.",
                 nameof(name));
         }
 
