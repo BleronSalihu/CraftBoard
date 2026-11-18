@@ -27,20 +27,26 @@ public class Project
         Description = description;
     }
 
+
     public void Rename(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) {
+        if (string.IsNullOrWhiteSpace(name))
+        {
             throw new ArgumentException(
                 "Project name cannot be empty.",
                 nameof(name));
         }
 
-        if (name.Length > 100) {
+        var trimmedName = name.Trim();
+
+        if (trimmedName.Length > 100)
+        {
             throw new ArgumentException(
-                "Project name must not exceed 100 characters.",
+                "Project name cannot exceed 100 characters.",
                 nameof(name));
         }
 
-        Name = name.Trim();
+        Name = trimmedName;
     }
+
 }
