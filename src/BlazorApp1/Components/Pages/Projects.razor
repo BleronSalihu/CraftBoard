@@ -1,0 +1,185 @@
+﻿@page "/projects"
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Authorization
+@using CraftBoard.Application.Services
+@using CraftBoard.Domain.Entities
+
+@inject ProjectService ProjectService
+
+<PageTitle>Projects | CraftBoard</PageTitle>
+
+<h1>Meine Projekte</h1>
+
+<p class="text-muted">
+    Verwalte deine Projekte an einem Ort.
+</p>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h4>Neues Projekt erstellen</h4>
+
+        <EditForm Model="@newProject"
+                  OnValidSubmit="CreateProjectAsync"
+                  FormName="create-project">
+
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Projektname
+                </label>
+
+                <InputText class="form-control"
+                           @bind-Value="newProject.Name" />
+
+                <ValidationMessage For="@(() => newProject.Name)" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Beschreibung
+                </label>
+
+                <InputTextArea class="form-control"
+                               @bind-Value="newProject.Description" />
+
+                <ValidationMessage For="@(() => newProject.Description)" />
+            </div>
+
+            <button type="submit"
+                    class="btn btn-primary"
+                    disabled="@isSaving">
+                @(isSaving ? "Speichern..." : "Projekt erstellen")
+            </button>
+
+        </EditForm>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<h3>Deine Projekte</h3>
+
+@if (isLoading)
+{
+    <p>Projekte werden geladen...</p>
+}
+else if (projects.Count == 0)
+{
+    <div class="alert alert-info">
+        Du hast noch keine Projekte erstellt.
+    </div>
+}
+else
+{
+    <div class="row g-3">
+        @foreach (var project in projects)
+        {
+            <div class="col-md-6" @key="project.Id">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            @project.Name
+                        </h5>
+
+                        <p class="card-text">
+                            @project.Description
+                        </p>
+
+                        <small class="text-muted">
+                            Erstellt:
+                            @project.CreatedAtUtc.ToLocalTime()
+                            .ToString("dd.MM.yyyy")
+                        </small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Project> projects = [];
+
+    private CreateProjectModel newProject = new();
+
+    private bool isLoading = true;
+    private bool isSaving;
+
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            projects = await ProjectService.GetAllAsync();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            errorMessage = "Bitte melde dich erneut an.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "Projekte konnten nicht geladen werden.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        if (isSaving)
+        {
+            return;
+        }
+
+        isSaving = true;
+        errorMessage = null;
+
+        try
+        {
+            await ProjectService.CreateAsync(
+                newProject.Name,
+                newProject.Description);
+
+            projects = await ProjectService.GetAllAsync();
+
+            newProject = new CreateProjectModel();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            errorMessage = "Bitte melde dich erneut an.";
+        }
+        catch (Exception)
+        {
+            errorMessage = "Das Projekt konnte nicht gespeichert werden.";
+        }
+        finally
+        {
+            isSaving = false;
+        }
+    }
+
+    private sealed class CreateProjectModel
+    {
+        [Required(ErrorMessage = "Projektname ist erforderlich.")]
+        [StringLength(100, ErrorMessage =
+            "Maximal 100 Zeichen erlaubt.")]
+        public string Name { get; set; } = string.Empty;
+
+        [StringLength(1000, ErrorMessage =
+            "Maximal 1000 Zeichen erlaubt.")]
+        public string Description { get; set; } = string.Empty;
+    }
+}

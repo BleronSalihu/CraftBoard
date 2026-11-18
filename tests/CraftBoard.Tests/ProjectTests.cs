@@ -1,22 +1,22 @@
 ﻿
 using CraftBoard.Domain.Entities;
+
 namespace CraftBoard.Tests;
 
 public class ProjectTests
 {
     [Fact]
-    public void Constructor_WithValidName_CreatesProject()
+    public void Constructor_WithValidData_CreatesProject()
     {
-        // Arrange
-        var name = "ProjectFlow";
-        var description = "Projektmanagement-System";
+        var ownerId = "user-123";
 
-        // Act
-        var project = new Project(name, description);
+        var project = new Project(
+            ownerId,
+            "CraftBoard",
+            "Projektmanagement");
 
-        // Assert
-        Assert.Equal(name, project.Name);
-        Assert.Equal(description, project.Description);
+        Assert.Equal(ownerId, project.OwnerId);
+        Assert.Equal("CraftBoard", project.Name);
         Assert.NotEqual(Guid.Empty, project.Id);
     }
 
@@ -27,13 +27,13 @@ public class ProjectTests
         string input,
         string expected)
     {
-        // Arrange
-        var project = new Project("Original", "Beschreibung");
+        var project = new Project(
+            "user-123",
+            "Original",
+            "Beschreibung");
 
-        // Act
         project.Rename(input);
 
-        // Assert
         Assert.Equal(expected, project.Name);
     }
 
@@ -44,13 +44,22 @@ public class ProjectTests
     public void Rename_WithInvalidName_ThrowsException(
         string invalidName)
     {
-        // Arrange
-        var project = new Project("Original", "Beschreibung");
+        var project = new Project(
+            "user-123",
+            "Original",
+            "Beschreibung");
 
-        // Act
-        Action action = () => project.Rename(invalidName);
+        Assert.Throws<ArgumentException>(
+            () => project.Rename(invalidName));
+    }
 
-        // Assert
-        Assert.Throws<ArgumentException>(action);
+    [Fact]
+    public void Constructor_WithoutOwner_ThrowsException()
+    {
+        Assert.Throws<ArgumentException>(
+            () => new Project(
+                "",
+                "Test",
+                "Beschreibung"));
     }
 }
